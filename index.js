@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const app = express();
-const port =process.env.PORT || 5000;
+const port = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
@@ -28,18 +28,18 @@ function verifyJWT(req, res, next) {
     next();
   });
 }
-async function run(){
-try{
+async function run() {
+  try {
     await client.connect();
     console.log('database connected');
     const serviceCollection = client.db('assignment-12').collection('services');
     const userCollection = client.db('assignment-12').collection('users');
 
-    app.get('/service',async(req, res)=>{
-        const query = {};
-        const cursor = serviceCollection.find(query)
-        const services = await cursor.toArray();
-        res.send(services);
+    app.get('/service', async (req, res) => {
+      const query = {};
+      const cursor = serviceCollection.find(query)
+      const services = await cursor.toArray();
+      res.send(services);
     });
 
     app.get('/user', async (req, res) => {
@@ -47,10 +47,10 @@ try{
       res.send(users);
     });
 
-    app.put('/user/:email', async(req,res)=>{
+    app.put('/user/:email', async (req, res) => {
       const email = req.params.email;
       const user = req.body;
-      const filter = {email : email}
+      const filter = { email: email }
       const options = { upsert: true };
       const updateDoc = {
         $set: user,
@@ -59,35 +59,35 @@ try{
       const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
       res.send({ result, token });
     });
-    app.get('/admin/:email', async(req, res) =>{
+    app.get('/admin/:email', async (req, res) => {
       const email = req.params.email;
-      const user = await userCollection.findOne({email: email});
+      const user = await userCollection.findOne({ email: email });
       const isAdmin = user.role === 'admin';
-      res.send({admin: isAdmin})
+      res.send({ admin: isAdmin })
     })
 
-    app.put('/user/admin/:email',verifyJWT, async(req,res)=>{
+    app.put('/user/admin/:email', verifyJWT, async (req, res) => {
       const email = req.params.email;
       const requester = req.decoded.email;
       const requesterAccount = await userCollection.findOne({ email: requester });
-      if (requesterAccount.role === 'admin'){
-        const filter = {email : email};
+      if (requesterAccount.role === 'admin') {
+        const filter = { email: email };
         const updateDoc = {
           $set: { role: 'admin' },
         };
         const result = await userCollection.updateOne(filter, updateDoc);
-        res.send({result});
+        res.send({ result });
       }
-      else{
-        res.status(403).send({message: 'forbidden'});
+      else {
+        res.status(403).send({ message: 'forbidden' });
       }
-     
+
     })
 
-}
-finally{
+  }
+  finally {
 
-}
+  }
 }
 run().catch(console.dir);
 
